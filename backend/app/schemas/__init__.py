@@ -1,0 +1,1 @@
+# Beacon AI Pydantic schemas module 

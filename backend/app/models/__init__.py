@@ -1,0 +1,1 @@
+# Beacon AI SQLAlchemy models module 

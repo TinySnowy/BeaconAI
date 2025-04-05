@@ -7,17 +7,18 @@ module.exports = {
   ],
   theme: {
     extend: {
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'gradient-conic':
+          'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+      },
       colors: {
-        singlife: {
-          red: '#ea3326', // Primary red
-          dark: '#1e1e1e', // Dark color
-          white: '#ffffff', // White
-          light: '#eeeeee', // Light gray
-        },
+        'singlife-red': '#E01F3D',
+        'singlife-dark': '#333333',
       },
     },
   },
   plugins: [
     require('@tailwindcss/typography'),
   ],
-}; 
+} 

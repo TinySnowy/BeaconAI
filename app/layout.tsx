@@ -4,7 +4,7 @@ import { Inter } from 'next/font/google';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
-  title: 'Beacon AI - Financial Advisor Assistant',
+  title: 'BeaconAI - Financial Advisor Assistant',
   description: 'AI-powered assistant for insurance financial advisors',
 };
 
