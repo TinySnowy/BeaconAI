@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 30, 30, 30;
+  --background-start-rgb: 255, 255, 255;
+  --background-end-rgb: 238, 238, 238;
+  --primary-color: 234, 51, 38; /* #ea3326 */
+  --secondary-color: 30, 30, 30; /* #1e1e1e */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 30, 30, 30;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-start-rgb));
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-singlife-red text-white px-4 py-2 rounded-md hover:bg-singlife-dark/90 transition-colors;
+  }
+  
+  .card {
+    @apply bg-white dark:bg-singlife-dark rounded-lg shadow-md p-4;
+  }
+}
+
+/* Typing indicator animation */
+.dot-typing {
+  position: relative;
+  left: -9999px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #ea3326;
+  color: #ea3326;
+  box-shadow: 9984px 0 0 0 #ea3326, 9999px 0 0 0 #ea3326, 10014px 0 0 0 #ea3326;
+  animation: dot-typing 1.5s infinite linear;
+}
+
+@keyframes dot-typing {
+  0% {
+    box-shadow: 9984px 0 0 0 #ea3326, 9999px 0 0 0 #ea3326, 10014px 0 0 0 #ea3326;
+  }
+  16.667% {
+    box-shadow: 9984px -5px 0 0 #ea3326, 9999px 0 0 0 #ea3326, 10014px 0 0 0 #ea3326;
+  }
+  33.333% {
+    box-shadow: 9984px 0 0 0 #ea3326, 9999px 0 0 0 #ea3326, 10014px 0 0 0 #ea3326;
+  }
+  50% {
+    box-shadow: 9984px 0 0 0 #ea3326, 9999px -5px 0 0 0 #ea3326, 10014px 0 0 0 #ea3326;
+  }
+  66.667% {
+    box-shadow: 9984px 0 0 0 #ea3326, 9999px 0 0 0 #ea3326, 10014px 0 0 0 #ea3326;
+  }
+  83.333% {
+    box-shadow: 9984px 0 0 0 #ea3326, 9999px 0 0 0 #ea3326, 10014px -5px 0 0 0 #ea3326;
+  }
+  100% {
+    box-shadow: 9984px 0 0 0 #ea3326, 9999px 0 0 0 #ea3326, 10014px 0 0 0 #ea3326;
+  }
+} 
