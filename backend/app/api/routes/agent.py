@@ -1,3 +1,4 @@
+# backend/app/api/routes/agent.py
 from typing import List, Optional
 from uuid import UUID, uuid4
 from datetime import datetime
@@ -17,6 +18,9 @@ from app.schemas.agent import (
 )
 from app.core.exceptions import ResourceNotFoundException
 from loguru import logger
+
+# Import the agent system
+from app.agent.main import handle_agent_request
 
 router = APIRouter()
 
@@ -105,43 +109,40 @@ async def query_agent(
         conversation.messages.append(user_message)
         conversation.timestamp = datetime.now()
         
-        # In a real implementation, this is where you would call the AI model
-        # For now, we'll return a mock response
+        # Process the query using the multi-agent system
+        agent_result = await handle_agent_request(query_request, client, conversation)
         
-        # Mock document references
-        document_references = []
-        if query_request.function_type == "policy-explainer":
-            # Find some policy documents to reference
-            doc_query = select(Document).filter(
-                Document.type == "policy", 
-                Document.client_id == query_request.client_id
-            ).limit(2)
-            doc_result = await db.execute(doc_query)
-            documents = doc_result.scalars().all()
-            
-            for doc in documents:
-                document_references.append(DocumentReference(
-                    id=doc.id,
-                    title=doc.title,
-                    type=doc.type,
-                    snippet="This is a relevant excerpt from the document..."
-                ))
+        # Extract information from the agent result
+        if agent_result["final_response"]:
+            response_text = agent_result["final_response"]
+        else:
+            # Get the last AI message from the result
+            for message in reversed(agent_result["messages"]):
+                if isinstance(message, dict) and message.get("sender") == "ai":
+                    response_text = message.get("content", "")
+                    break
+            else:
+                # Fallback if no AI message found
+                response_text = "The agent was unable to process your request."
         
-        # Mock thinking process
+        # Get the thinking process if available
         thinking = None
-        if query_request.function_type == "needs-assessment":
-            thinking = "1. Client profile indicates moderate risk tolerance\n2. Has dependents, so needs life coverage\n3. Age suggests retirement planning is important\n4. Current portfolio lacks health insurance"
+        for agent, output in agent_result["agent_outputs"].items():
+            if agent != "coordinator" and "chain_of_thought" in output:
+                thinking = output["chain_of_thought"]
+                break
         
-        # Generate AI response based on function type
-        response_text = ""
-        if query_request.function_type == "policy-explainer":
-            response_text = "Based on the client's policy documents, their current coverage includes term life insurance with $500,000 coverage until 2041. The policy includes standard exclusions for suicide within the first 2 years. Would you like me to explain any specific aspect of this policy in more detail?"
-        elif query_request.function_type == "needs-assessment":
-            response_text = "After analyzing the client's profile and current policies, I recommend focusing on health insurance coverage, which is currently missing from their portfolio. Given their age and dependents, this should be a priority alongside their existing life insurance."
-        elif query_request.function_type == "product-recommendation":
-            response_text = "For this client's needs, I would recommend our Premium Health Plan which provides comprehensive coverage with a moderate premium of $450/month. This would complement their existing term life policy and provide the health coverage they currently lack."
-        elif query_request.function_type == "compliance-check":
-            response_text = "The recommended product aligns with regulatory requirements. All necessary disclosures have been included in the documentation. You should ensure the client signs the risk disclosure form on page 3 before proceeding with the application."
+        # Get document references if available
+        document_references = []
+        for agent, output in agent_result["agent_outputs"].items():
+            if agent != "coordinator" and "document_references" in output:
+                for doc_ref in output["document_references"]:
+                    document_references.append(DocumentReference(
+                        id=UUID(doc_ref["id"]) if isinstance(doc_ref["id"], str) else doc_ref["id"],
+                        title=doc_ref["title"],
+                        type=doc_ref["type"],
+                        snippet=doc_ref["snippet"]
+                    ))
         
         # Create AI response message
         ai_message = {
@@ -152,10 +153,11 @@ async def query_agent(
             "agentType": query_request.function_type
         }
         
-        # Add any thinking or document references
+        # Add thinking process if available
         if thinking:
             ai_message["chainOfThought"] = thinking
         
+        # Add document references if available
         if document_references:
             ai_message["documentReferences"] = [
                 {
@@ -194,5 +196,5 @@ async def query_agent(
         logger.error(f"Error in agent query: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred while processing the query"
-        ) 
+            detail=f"An error occurred while processing the query: {str(e)}"
+        )
